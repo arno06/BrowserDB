@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+        <script src="../../Dependencies/src/?need=M4"></script>
+        <script src="../src/WSQLHandler.js"></script>
+        <script src="../src/Query.js"></script>
+    </head>
+    <body>
+        <script>
+
+            "use strict";
+
+            class WSQLModel
+            {
+                constructor(pTable)
+                {
+                    this.table = pTable;
+                    this.handler = null;
+                }
+
+                insert(pValues)
+                {
+                    return Query.insert(pValues).into(this.table).execute(this.handler);
+                }
+
+                update(pValues, pCond)
+                {
+                    pCond = pCond||Query.condition();
+                    return Query.update(this.table).values(pValues).setCondition(pCond).execute(this.handler);
+                }
+
+                static create()
+                {
+                    return false;
+                }
+
+                static update(pVersion)
+                {
+                    return false;
+                }
+            }
+
+            class ModelUser extends WSQLModel
+            {
+
+                constructor(pTable)
+                {
+                    super.constructor(pTable);
+                }
+
+                static create()
+                {
+                    return 'CREATE TABLE IF NOT EXISTS main_user (login_user varchar(255) NOT NULL, password_user varchar(32) NOT NULL, permissions_user INT(5) NOT NULL);';
+                }
+            }
+
+            var VERSION = '1.0';
+            var db;
+
+            WDBManager.set('dummy_db_1', VERSION, 'Dummy DB', 10 * 1024 * 1024)
+                    .registerModel(ModelUser)
+                    .open();
+
+
+
+
+
+            function gogogo()
+            {
+                var query = Query.select("login_user", "main_user").andWhere('login_user', Query.LIKE, '%nicolas%').toString();
+                console.log("woot");
+                db.transaction(function(pT){
+                    pT.executeSql(query, [], function(pT, pResults)
+                    {
+                        console.log("bouboup");
+                        console.log(pResults.rows.item(0));
+                    }, function(pE)
+                    {
+                        console.log("nop : ");
+                        console.log(pE);
+                    });
+                });
+                console.log("Query.select");
+                console.log(query);
+            }
+
+            console.group("Query");
+
+            console.group("Query.select");
+            console.log(Query.select("login_user", "main_user").andWhere('login_user', Query.LIKE, '%nicolas%').toString());
+            console.groupEnd();
+
+            var v = {"login_user":"arnaud.nicolas@vidal.fr", "password_user":"lolilol", "permissions_user":1};
+
+            console.group("Query.insert");
+            console.log(Query.insert(v).into("main_user").toString());
+            console.groupEnd();
+
+            console.group("Query.insertMultiple");
+            console.log(Query.insertMultiple([v, v, {"login_user":"arno06@gmail.com", "permissions_user":"2", "password_user":"wootwoot"}]).into("main_user").toString());
+            console.groupEnd();
+
+            console.group("Query.update");
+            console.log(Query.update('main_user').values(v).andWhere('login_user', Query.LIKE, '%arnaud.nicolas%').toString());
+            console.groupEnd();
+
+            console.group('Query.delete');
+            console.log(Query.delete().from('main_user').andWhere('login_user', Query.EQUAL, 'arnaud.nicolas').limit(0, 1).toString());
+            console.groupEnd();
+
+            console.group('Query.truncate');
+            console.log(Query.truncate('main_user').toString());
+            console.groupEnd();
+
+
+            console.groupEnd();
+
+        </script>
+    </body>
+</html>

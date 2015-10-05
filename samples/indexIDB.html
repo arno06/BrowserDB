@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+        <script src="../../Dependencies/src/?need=IDBHandler"></script>
+    </head>
+    <body>
+        <p>F12 - Ctrl + u</p>
+        <script>
+            var VERSION = 3;
+            var model;
+            var handler;
+            function init()
+            {
+                console.log("bouboup");
+
+                model = new BaseModel('test', 'id_test');
+
+                handler = new IDBHandler('dummy', VERSION);
+                handler.registerModel(model);
+                handler.addEventListener(DBHandler.DB_ERROR, nop, false);
+                handler.addEventListener(DBHandler.DB_READY, go, false);
+                handler.open();
+            }
+
+            function nop(e)
+            {
+                console.log("nop");
+                console.log(e);
+            }
+
+            function go(e)
+            {
+                console.log("DB Ready");
+                listItems(addOne);
+            }
+
+            function addOne()
+            {
+                model.insert({"name":"toto", "firstname":"bouboup"}).onResult(function(pResult)
+                {
+                    console.log("added (normalement)");
+                    listItems(deleteFirst);
+                }).onError(function(pE)
+                {
+                    console.log("not added : ");
+                    console.log(pE);
+                });
+            }
+
+            function listItems(pNext)
+            {
+                pNext = pNext||function(){};
+                model.all().onResult(function(pResults)
+                {
+                    console.log("listItems results : "+pResults.length);
+                    pNext(pResults);
+                }).onError(function(pE)
+                {
+                    console.log("listItems error : ");
+                    console.log(pE);
+                    pNext();
+                });
+            }
+
+            function deleteFirst(pResults)
+            {
+                model.delete(pResults[0].id_test).onResult(function(pR)
+                {
+                    console.log("deleted");
+                    listItems(end);
+                }).onError(function()
+                {
+                    console.log("Not deleted");
+                    console.log(arguments);
+                });
+            }
+
+            function end(pResults)
+            {
+                console.log(pResults);
+            }
+
+            window.addEventListener('load', init, false);
+        </script>
+    </body>
+</html>
